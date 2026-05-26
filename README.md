@@ -1,5 +1,7 @@
 # chessctl
 
+![chessctl agent-driven chess GUI](assets/chessctl-demo.png)
+
 `chessctl` is a thin deterministic wrapper around `python-chess`, plus a small browser board for agent-driven play.
 
 It is not a chess engine, not an LLM, and not a grand platform. It is a hobby project. Its job is closer to a linter/compiler guardrail: expose the real board state, legal moves, captures, checks, checkmate, and game outcome so an external agent cannot make illegal moves.
