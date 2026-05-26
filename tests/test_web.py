@@ -81,6 +81,37 @@ class WebServerTest(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_promotion_moves_are_exposed_for_web_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game.json"
+            server = create_server("127.0.0.1", 0, game_path=game, engine_color=chess.BLACK)
+            host, port = server.server_address
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                fen = "7k/4P3/8/8/8/8/8/K7 w - - 0 1"
+                status, data = self.request(host, port, "POST", "/api/new", {"human_color": "white", "fen": fen})
+                self.assertEqual(status, 200)
+
+                promotions = {
+                    move["promotion"]: move["uci"]
+                    for move in data["legal_moves"]
+                    if move["from"] == "e7" and move["to"] == "e8"
+                }
+                self.assertEqual(
+                    promotions,
+                    {
+                        "queen": "e7e8q",
+                        "rook": "e7e8r",
+                        "bishop": "e7e8b",
+                        "knight": "e7e8n",
+                    },
+                )
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
 
 if __name__ == "__main__":
     unittest.main()

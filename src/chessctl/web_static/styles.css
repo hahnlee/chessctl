@@ -205,6 +205,59 @@ button:disabled {
   color: var(--ink);
 }
 
+.promotion-dialog[hidden] {
+  display: none;
+}
+
+.promotion-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(25, 27, 31, 0.36);
+}
+
+.promotion-card {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 340px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+  box-shadow: 0 18px 48px rgba(25, 27, 31, 0.22);
+}
+
+.promotion-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.promotion-option {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0;
+}
+
+.promotion-option:hover,
+.promotion-option:focus-visible {
+  border-color: var(--selected);
+  outline: 3px solid var(--last);
+}
+
+.promotion-option .piece {
+  font-size: 42px;
+}
+
 .side-panel {
   display: grid;
   gap: 14px;

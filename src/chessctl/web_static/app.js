@@ -11,10 +11,14 @@ const manualFormEl = document.querySelector("#manual-form");
 const manualMoveEl = document.querySelector("#manual-move");
 const newWhiteEl = document.querySelector("#new-white");
 const newBlackEl = document.querySelector("#new-black");
+const promotionDialogEl = document.querySelector("#promotion-dialog");
+const promotionOptionsEl = document.querySelector("#promotion-options");
+const promotionCancelEl = document.querySelector("#promotion-cancel");
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const WHITE_RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
 const BLACK_RANKS = [1, 2, 3, 4, 5, 6, 7, 8];
+const PROMOTION_ORDER = ["queen", "rook", "bishop", "knight"];
 const PIECE_CODES = {
   K: 0x2654,
   Q: 0x2655,
@@ -33,6 +37,8 @@ const PIECE_CODES = {
 let snapshot = null;
 let selectedSquare = null;
 let lastMoveSquares = [];
+let pendingPromotionMoves = [];
+let promotionReturnFocus = null;
 
 function pieceGlyph(symbol) {
   return String.fromCodePoint(PIECE_CODES[symbol] || 0x25a1);
@@ -87,8 +93,66 @@ function squareColor(fileIndex, rank) {
   return (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
 }
 
-function choosePromotionMove(moves) {
-  return moves.find((move) => move.promotion === "queen") || moves[0];
+function promotionRank(move) {
+  const index = PROMOTION_ORDER.indexOf(move.promotion);
+  return index === -1 ? PROMOTION_ORDER.length : index;
+}
+
+function promotionLabel(promotion) {
+  return `${promotion[0].toUpperCase()}${promotion.slice(1)}`;
+}
+
+function promotionGlyph(move) {
+  const symbols = {
+    queen: "q",
+    rook: "r",
+    bishop: "b",
+    knight: "n",
+  };
+  const symbol = symbols[move.promotion] || "q";
+  return pieceGlyph(move.piece.color === "white" ? symbol.toUpperCase() : symbol);
+}
+
+function closePromotionDialog() {
+  promotionDialogEl.hidden = true;
+  promotionOptionsEl.innerHTML = "";
+  pendingPromotionMoves = [];
+  if (promotionReturnFocus && document.body.contains(promotionReturnFocus)) {
+    promotionReturnFocus.focus();
+  }
+  promotionReturnFocus = null;
+}
+
+function openPromotionDialog(moves) {
+  pendingPromotionMoves = moves
+    .filter((move) => move.promotion)
+    .sort((left, right) => promotionRank(left) - promotionRank(right));
+  promotionOptionsEl.innerHTML = "";
+
+  for (const move of pendingPromotionMoves) {
+    const button = document.createElement("button");
+    const label = promotionLabel(move.promotion);
+    button.type = "button";
+    button.className = "promotion-option";
+    button.dataset.move = move.uci;
+    button.title = label;
+    button.setAttribute("aria-label", `Promote to ${label}`);
+
+    const piece = document.createElement("span");
+    piece.className = `piece ${move.piece.color}`;
+    piece.textContent = promotionGlyph(move);
+    button.appendChild(piece);
+
+    button.addEventListener("click", () => {
+      closePromotionDialog();
+      playMove(move.uci);
+    });
+    promotionOptionsEl.appendChild(button);
+  }
+
+  promotionReturnFocus = document.activeElement;
+  promotionDialogEl.hidden = false;
+  promotionOptionsEl.querySelector("button")?.focus();
 }
 
 async function playMove(move) {
@@ -116,8 +180,11 @@ function handleSquareClick(square, piece) {
   if (selectedSquare) {
     const moves = legalTo(selectedSquare, square);
     if (moves.length > 0) {
-      const move = choosePromotionMove(moves);
-      playMove(move.uci);
+      if (moves.some((move) => move.promotion)) {
+        openPromotionDialog(moves);
+      } else {
+        playMove(moves[0].uci);
+      }
       return;
     }
   }
@@ -253,6 +320,7 @@ async function loadState() {
   setBusy(true);
   try {
     const data = await api("/api/state");
+    closePromotionDialog();
     render(data);
   } catch (error) {
     showError(error.message);
@@ -269,6 +337,7 @@ async function newGame(humanColor) {
       body: JSON.stringify({ human_color: humanColor }),
     });
     selectedSquare = null;
+    closePromotionDialog();
     const applied = data.applied_moves || [];
     const last = applied[applied.length - 1];
     lastMoveSquares = last ? [last.from, last.to] : [];
@@ -290,6 +359,13 @@ manualFormEl.addEventListener("submit", (event) => {
 
 newWhiteEl.addEventListener("click", () => newGame("white"));
 newBlackEl.addEventListener("click", () => newGame("black"));
+promotionCancelEl.addEventListener("click", closePromotionDialog);
+promotionDialogEl.addEventListener("click", (event) => {
+  if (event.target === promotionDialogEl) closePromotionDialog();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !promotionDialogEl.hidden) closePromotionDialog();
+});
 window.addEventListener("resize", renderBoard);
 
 loadState();
