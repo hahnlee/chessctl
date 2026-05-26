@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chessctl</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="board-region" aria-label="Chessboard">
+        <div class="board-toolbar">
+          <div>
+            <h1>chessctl</h1>
+            <p id="status-line">Loading position...</p>
+          </div>
+          <div class="toolbar-actions">
+            <button id="new-white" type="button">New as White</button>
+            <button id="new-black" type="button">New as Black</button>
+          </div>
+        </div>
+        <div id="board" class="board" aria-label="Interactive chessboard"></div>
+        <form id="manual-form" class="manual-form">
+          <input id="manual-move" name="move" autocomplete="off" placeholder="Move, e.g. e2e4 or Nf3" />
+          <button type="submit">Play</button>
+        </form>
+      </section>
+
+      <aside class="side-panel" aria-label="Game details">
+        <section class="panel-section">
+          <h2>Position</h2>
+          <dl class="facts">
+            <div><dt>Turn</dt><dd id="turn">-</dd></div>
+            <div><dt>You</dt><dd id="human-color">-</dd></div>
+            <div><dt>Engine</dt><dd id="engine-color">-</dd></div>
+            <div><dt>Legal moves</dt><dd id="legal-count">-</dd></div>
+            <div><dt>Result</dt><dd id="result">-</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel-section">
+          <h2>Last Turn</h2>
+          <div id="last-turn" class="last-turn">No moves yet.</div>
+        </section>
+
+        <section class="panel-section move-section">
+          <h2>Moves</h2>
+          <ol id="move-list" class="move-list"></ol>
+        </section>
+      </aside>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

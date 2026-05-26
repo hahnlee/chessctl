@@ -1,0 +1,23 @@
+# Local game state
+game.json
+games/
+.run/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and build outputs
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Local OS/editor noise
+.DS_Store
+*.swp
